@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net"
 )
 
@@ -9,25 +11,33 @@ import (
 func Server(serverPort string) {
 	fmt.Println("Hello from server")
 	sPort := ":" + serverPort
-	fmt.Println(sPort)
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", sPort)
+	fmt.Println("sPort:", sPort)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", sPort)
 	CheckError(err)
-	fmt.Println(tcpAddr)
-
+	fmt.Println("TCPAddr:", tcpAddr)
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	CheckError(err)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			continue
 		}
 		fmt.Println("Server is listening")
-		var buf [BUFFER_SIZE]byte
 
-		n, err := conn.Read(buf[0:])
-		CheckError(err)
-		fmt.Println("Bytes read: ", n)
-		fmt.Println("Buffer: ", string(buf[:n]))
-		defer conn.Close()
+		r := bufio.NewReader(conn)
+	Loop:
+		for {
+			line, err := r.ReadBytes(byte('\n'))
+			switch err {
+			case nil:
+				break
+			case io.EOF:
+				break Loop
+			default:
+				fmt.Println("ERROR", err)
+			}
+			fmt.Println(string(line))
+		}
 	}
 }

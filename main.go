@@ -12,6 +12,7 @@ const BUFFER_SIZE = 2048
 // Check errors
 func CheckError(err error) {
 	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
