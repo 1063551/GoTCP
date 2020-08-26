@@ -20,7 +20,9 @@ func Client(sAddr string, sPort string) {
 	CheckError(err)
 
 	input := bufio.NewReader(os.Stdin)
+	read := bufio.NewReader(conn)
 	for {
+		fmt.Printf("ssh ~mb-air $ ")
 		line, err := input.ReadBytes(byte('\n'))
 		switch err {
 		case nil:
@@ -31,5 +33,26 @@ func Client(sAddr string, sPort string) {
 			fmt.Println("ERROR", err)
 			os.Exit(1)
 		}
+
+		// We read the command output from the server
+		var retErr error
+		var comOut string
+	Loop:
+		for {
+			line, retErr = read.ReadBytes(byte('\r'))
+			fmt.Println(line, retErr)
+			switch retErr {
+			case nil:
+				break
+			case io.EOF:
+				break Loop
+			default:
+				fmt.Println("ERROR", retErr)
+			}
+			comOut += string(line)
+			fmt.Println("Saliendo del loop")
+			break Loop
+		}
+		fmt.Println(comOut)
 	}
 }

